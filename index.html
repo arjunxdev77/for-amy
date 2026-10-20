@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5EFF3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#130E19" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Amy's Note">
+<title>Amy’s daily note</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+:root{
+  --bg:#F5EFF3;--surface:#FFFCFD;--surface-2:#F9F1F5;--ink:#241A2B;--muted:#76677E;
+  --line:#EADDE6;--line-strong:#D6C3D1;--accent:#B8245E;--accent-hover:#9C1B4E;--accent-2:#7B2D8E;
+  --accent-ink:#FFFFFF;--soft:#F3DDE8;--ok:#2F7D6B;
+  --shadow:0 10px 30px -12px rgba(80,30,70,.22);--shadow-lg:0 20px 50px -20px rgba(80,30,70,.34);
+  --grad:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#130E19;--surface:#1D1626;--surface-2:#251C30;--ink:#F5ECF2;--muted:#B4A3BC;
+    --line:#33263F;--line-strong:#4A3A59;--accent:#FF6B9A;--accent-hover:#FF86AE;--accent-2:#FFA977;
+    --accent-ink:#1A0F18;--soft:#2F2040;--ok:#7FD1B4;
+    --shadow:0 10px 30px -12px rgba(0,0,0,.6);--shadow-lg:0 20px 50px -20px rgba(0,0,0,.8);
+  }
+}
+html{color-scheme:light dark;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0;background:var(--bg);
+  background-image:radial-gradient(at 15% 8%,rgba(184,36,94,.10) 0,transparent 45%),radial-gradient(at 92% 92%,rgba(123,45,142,.09) 0,transparent 50%);
+  color:var(--ink);font:17px/1.55 "Iowan Old Style","Palatino Linotype",Georgia,serif;
+  -webkit-font-smoothing:antialiased;transition:background-color .3s,color .3s;
+}
+@media (prefers-color-scheme: dark){body{background-image:radial-gradient(at 15% 8%,rgba(255,107,154,.14) 0,transparent 45%),radial-gradient(at 92% 92%,rgba(255,169,119,.07) 0,transparent 50%)}}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+h1,h2,h3,button,.ui{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:22px}
+h1{margin:0;font-size:2rem;line-height:1.1;letter-spacing:-.02em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+.day-nav{display:flex;align-items:center;gap:6px;font:600 .85rem/1 system-ui,sans-serif;color:var(--muted)}
+.day-nav button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:1rem;transition:background .15s,border-color .15s,transform .15s}
+.day-nav button:hover:not(:disabled){border-color:var(--accent);background:var(--surface-2);transform:scale(1.05)}
+.day-nav button:disabled{opacity:.35;cursor:default}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.flip{perspective:1600px}
+.flip-inner{display:grid;transition:transform .6s cubic-bezier(.3,1.2,.5,1);transform-style:preserve-3d}
+.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:26px 24px;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:box-shadow .3s}
+.face:hover{box-shadow:var(--shadow-lg)}
+.face.front,.face.back{background:radial-gradient(120% 55% at 100% 0%,var(--soft),transparent 62%),var(--surface)}
+.face.back{transform:rotateY(180deg)}
+.tag{align-self:flex-start;font:600 .78rem/1 system-ui,sans-serif;color:var(--accent);background:var(--soft);padding:7px 12px;border-radius:99px}
+.card-top{display:flex;justify-content:space-between;align-items:center}
+.icon-btn{border:0;background:transparent;color:var(--muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;transition:background .15s,color .15s}
+.icon-btn:hover{background:var(--soft);color:var(--accent)}
+.trait{font:800 clamp(2.3rem,9vw,3.2rem)/1.02 system-ui,sans-serif;letter-spacing:-.03em;margin:18px 0 4px;text-wrap:balance;color:var(--ink)}
+.sub{color:var(--accent);font:600 .92rem/1.4 system-ui,sans-serif;margin:0}
+.quote{margin:18px 0 0;font-size:1.08rem;line-height:1.65}
+.spacer{flex:1;min-height:22px}
+.ask{font:600 .9rem/1 system-ui,sans-serif;color:var(--muted);margin:0 0 10px}
+.verdicts{display:flex;flex-wrap:wrap;gap:8px}
+.verdict{border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);border-radius:99px;padding:11px 16px;font-size:.92rem;font-weight:500;cursor:pointer;transition:transform .15s,background .15s,border-color .15s,color .15s}
+.verdict:hover{border-color:var(--accent);color:var(--accent)}
+.verdict:active{transform:scale(.97)}
+.verdict[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--accent-ink)}
+.feedback{min-height:1.4em;margin:10px 0 0;color:var(--accent);font:500 .88rem/1.4 system-ui,sans-serif}
+.signature{margin:14px 0 0;color:var(--muted);font-style:italic;font-size:.85rem;text-align:right}
+.back h2{margin:16px 0 14px;font-size:1.5rem;letter-spacing:-.01em}
+.reasons{margin:0;padding:0;list-style:none;display:grid;gap:14px;font-size:.98rem}
+.reasons strong{font-family:system-ui,sans-serif;color:var(--accent)}
+.pull{color:var(--muted);font-style:italic}
+
+.trait-reveal{display:inline-block}
+.trait-reveal .ch{display:inline-block;opacity:0;transform:translateY(14px);animation:chIn .45s cubic-bezier(.3,1.2,.5,1) forwards}
+@keyframes chIn{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.trait-reveal .ch{opacity:1;transform:none;animation:none}}
+
+h3.sec{margin:34px 4px 12px;font-size:1rem;color:var(--muted);font-weight:600}
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:"";position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:linear-gradient(var(--accent),var(--line) 70%);border-radius:2px;opacity:.7}
+.past{display:grid;gap:14px;position:relative}
+.note{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;color:inherit;cursor:pointer;font:inherit;position:relative;transition:border-color .15s,box-shadow .2s,transform .2s}
+.note:hover{border-color:var(--accent);transform:translateY(-1px)}
+.note::before{content:"";position:absolute;left:-24px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong);box-sizing:border-box;transition:background .2s,border-color .2s,box-shadow .2s}
+.note.has-verdict::before{background:var(--grad);border-color:transparent;box-shadow:0 0 0 4px var(--soft)}
+.note h4{margin:0;font:700 1.02rem/1.3 system-ui,sans-serif}
+.note p{margin:4px 0 0;color:var(--muted);font-size:.93rem;line-height:1.5}
+.note .meta{display:flex;justify-content:space-between;gap:8px;font:.8rem/1.2 system-ui,sans-serif;color:var(--muted);margin-bottom:6px}
+.note .said{color:var(--ok);font-weight:600}
+
+.locked{border:1px dashed var(--line-strong);background:var(--surface-2);text-align:center;cursor:default;overflow:hidden;padding:26px 18px 22px}
+.locked::before{border:2px dashed var(--line-strong)}
+.sealed{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0 4px}
+.seal-ring{position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center}
+.seal-ring::before,.seal-ring::after{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid var(--accent);opacity:.35;animation:sealPulse 3.2s ease-out infinite}
+.seal-ring::after{animation-delay:1.6s}
+@keyframes sealPulse{0%{transform:scale(.85);opacity:.45}70%,100%{transform:scale(1.35);opacity:0}}
+@media (prefers-reduced-motion:reduce){.seal-ring::before,.seal-ring::after{animation:none}}
+.seal-lock{width:40px;height:40px;border-radius:50%;background:var(--soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.15rem;position:relative;z-index:1;box-shadow:0 0 0 1px var(--line) inset}
+.sealed .title{margin:4px 0 0;font:700 1.05rem/1.3 system-ui,sans-serif;color:var(--ink)}
+.sealed .subtitle{margin:0;color:var(--muted);font:.88rem/1.4 system-ui,sans-serif;max-width:32ch}
+.countdown{margin:6px 0 0;font:600 .82rem/1 system-ui,sans-serif;color:var(--accent);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.countdown .label{display:block;color:var(--muted);font-weight:500;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.whisper{margin:14px 0 0;color:var(--muted);font:italic .82rem/1.3 system-ui,sans-serif}
+
+.guess-wrap{margin:14px 0 0;border-top:1px dashed var(--line-strong);padding-top:14px;text-align:left}
+.guess-label{font:600 .78rem/1.2 system-ui,sans-serif;color:var(--muted);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.guess-input{width:100%;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 12px;font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;resize:vertical;min-height:52px;transition:border-color .15s,box-shadow .15s}
+.guess-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.guess-save{margin-top:8px;display:flex;justify-content:flex-end;gap:8px;align-items:center}
+.guess-save button{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:99px;padding:8px 14px;font:500 .85rem system-ui,sans-serif;cursor:pointer;transition:border-color .15s,color .15s}
+.guess-save button:hover{border-color:var(--accent);color:var(--accent)}
+.guess-save .saved{color:var(--ok);font:500 .82rem system-ui,sans-serif;opacity:0;transition:opacity .25s}
+.guess-save .saved.show{opacity:1}
+
+footer{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+footer p{margin:0;font:600 .95rem/1.3 system-ui,sans-serif}
+footer small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.cta{background:var(--grad);color:var(--accent-ink);border:0;border-radius:99px;padding:12px 22px;font-weight:600;font-size:.95rem;text-decoration:none;cursor:pointer;transition:filter .15s,transform .15s;box-shadow:0 6px 16px -6px var(--accent)}
+.cta:hover{filter:brightness(1.08);transform:translateY(-1px)}
+dialog{border:1px solid var(--line);border-radius:24px;background:var(--surface);color:var(--ink);padding:24px;max-width:340px;width:calc(100% - 32px);box-shadow:var(--shadow-lg)}
+dialog::backdrop{background:rgba(19,14,25,.6);backdrop-filter:blur(6px)}
+dialog h4{margin:0 0 6px;font:700 1.2rem system-ui,sans-serif}
+dialog p{margin:0;color:var(--muted);font-size:.95rem}
+.row{display:flex;gap:10px;margin-top:20px}
+.row>*{flex:1;text-align:center}
+.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--ink);border-radius:99px;padding:12px;font-weight:500;cursor:pointer;font-size:.95rem;transition:background .15s}
+.ghost:hover{background:var(--surface-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
+.chip{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 14px;font:500 .88rem system-ui,sans-serif;cursor:pointer;transition:border-color .15s}
+.chip:hover{border-color:var(--accent)}
+.hint{text-align:center;color:var(--muted);font:.8rem/1 system-ui,sans-serif;margin:12px 0 0}
+
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,20px));transform:translateX(-50%) translateY(140%);background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 16px;font:500 .88rem/1.35 system-ui,sans-serif;display:flex;align-items:center;gap:10px;box-shadow:0 12px 40px -10px rgba(0,0,0,.45);max-width:calc(100% - 32px);z-index:60;transition:transform .45s cubic-bezier(.3,1.2,.5,1)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast button{background:rgba(128,128,128,.28);border:0;color:inherit;border-radius:99px;padding:6px 12px;font:600 .8rem system-ui,sans-serif;cursor:pointer;flex-shrink:0}
+.toast .dismiss{background:transparent;padding:4px;opacity:.6;font-size:1.1rem;line-height:1;width:24px;height:24px}
+.toast .dismiss:hover{opacity:1}
+@media (prefers-reduced-motion:reduce){.flip-inner,.verdict,.toast,.note,.cta{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1 id="greeting">Hey Amy 👋</h1>
+      <p>One small thing I noticed about you, every day.</p>
+    </div>
+    <nav class="day-nav" aria-label="Choose a day">
+      <button id="prev" aria-label="Previous day">‹</button>
+      <span id="dayLabel">Day 2</span>
+      <button id="next" aria-label="Next day">›</button>
+    </nav>
+  </header>
+
+  <section class="flip" id="flip" aria-live="polite">
+    <div class="flip-inner">
+      <article class="face front" id="front">
+        <div class="card-top">
+          <span class="tag" id="tag">Today’s note</span>
+          <button class="icon-btn" id="toBack" aria-label="Why this trait?">↻</button>
+        </div>
+        <h2 class="trait" id="trait"></h2>
+        <p class="sub" id="kicker"></p>
+        <p class="quote" id="quote"></p>
+        <div class="spacer"></div>
+        <p class="ask">How does that land?</p>
+        <div class="verdicts" id="verdicts" role="group" aria-label="Your reaction"></div>
+        <p class="feedback" id="feedback"></p>
+        <p class="signature">— noticed by someone paying attention</p>
+      </article>
+
+      <article class="face back" id="back">
+        <div class="card-top">
+          <span class="tag">Why this one</span>
+          <button class="icon-btn" id="toFront" aria-label="Back to the note">↺</button>
+        </div>
+        <h2 id="backTitle"></h2>
+        <ul class="reasons" id="reasons"></ul>
+      </article>
+    </div>
+  </section>
+
+  <p class="hint">← swipe, or use arrow keys →</p>
+  <h3 class="sec">Earlier notes</h3>
+  <div class="past timeline" id="past"></div>
+
+  <footer>
+    <p>Something on your mind about today?<small>Reply and I’ll see it right away.</small></p>
+    <div class="chips" id="chips" role="group" aria-label="Quick replies"></div>
+    <button class="cta" id="smsOpen">Reply by text</button>
+  </footer>
+</main>
+
+<dialog id="dlg">
+  <h4>Open Messages?</h4>
+  <p>Your messaging app will open with a reply to today’s note ready to go.</p>
+  <div class="row">
+    <button class="ghost" id="dlgCancel">Cancel</button>
+    <a class="cta" id="dlgGo" href="#">Open Messages</a>
+  </div>
+</dialog>
+
+<div class="toast" id="a2hsToast" role="status" aria-live="polite">
+  <span>📌 Add this to your home screen for a daily tap</span>
+  <button id="a2hsOk" type="button">Got it</button>
+  <button class="dismiss" id="a2hsClose" aria-label="Dismiss">×</button>
+</div>
+
+<script>
+(function(){
+  var TODAY = 2;
+  var SMS_NUMBER = "+16472239411";
+  var DAYS = [
+    {n:1, trait:"She has a very calm energy", kicker:"A grounding presence",
+     quote:"Unhurried and quietly confident, the kind of calm that makes everything around you feel a little more okay.",
+     why:"Calm energy", reasons:[]},
+    {n:2, trait:"She’s edgy", kicker:"Bold spirit, leather jacket edition",
+     quote:"There’s an effortless cool in the way you carry yourself today, Amy. The jacket is just the surface. It’s the quiet confidence and fearless energy underneath that makes you unforgettable.",
+     why:"The edge is real.", reasons:[
+      ["Fearless energy","You don’t wait for permission to be bold. You just are."],
+      ["Quiet strength","Edgy doesn’t mean loud. It means sure of yourself."],
+      ["Magnetic presence","People notice the way you own a room without trying."]],
+     pull:"It’s not the jacket. It’s the girl wearing it."},
+    {n:3, trait:"She’s intriguing", kicker:"A mystery worth leaning into",
+     quote:"You leave just enough unsaid to make people want to know more. It’s not aloofness — it’s depth that only shows itself to those who pay attention.",
+     why:"The pull of depth.", reasons:[
+      ["Restraint","You don’t overshare to fill silence. You let it breathe."],
+      ["Curiosity","You ask better questions than most people expect."],
+      ["Slow reveal","You’re more interesting the closer someone gets."]],
+     pull:"Not everything needs to be said out loud."}
+  ];
+  var VERDICTS = [
+    {id:"spot-on", label:"Spot on", msg:"🎯 Spot on. She knows it."},
+    {id:"flattered", label:"A bit flattered", msg:"🐆 A little flattered, and that’s a win."},
+    {id:"coffee", label:"Let’s talk about it", msg:"☕ Then let’s talk about it over coffee."}
+  ];
+
+  var $ = function(id){return document.getElementById(id)};
+  var current = TODAY;
+  var QUICK = ["Ha, accurate", "Okay, I’ll allow it", "Tell me more"];
+  var quick = null;
+  var GUESS_KEY = "amy-guess-day-" + (TODAY + 1);
+
+  function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function verdictFor(n){return load("amy-verdict-day-"+n)}
+  function vById(id){for(var i=0;i<VERDICTS.length;i++)if(VERDICTS[i].id===id)return VERDICTS[i];return null}
+  function labelOf(id){var v=vById(id);return v?v.label:""}
+  function msgOf(id){var v=vById(id);return v?v.msg:""}
+  function dayData(n){for(var i=0;i<DAYS.length;i++)if(DAYS[i].n===n)return DAYS[i]}
+
+  function setGreeting(){
+    var h = new Date().getHours(), g;
+    if(h >= 5 && h < 12) g = "Good morning, Amy ☀️";
+    else if(h >= 12 && h < 17) g = "Good afternoon, Amy 🌤️";
+    else if(h >= 17 && h < 22) g = "Good evening, Amy 🌙";
+    else g = "Hey Amy 🌙";
+    $("greeting").textContent = g;
+  }
+
+  function revealTraitTitle(text, animate){
+    var el = $("trait");
+    el.innerHTML = "";
+    if(!animate){ el.textContent = text; return; }
+    var words = text.split(" "), idx = 0;
+    words.forEach(function(w, wi){
+      var ws = document.createElement("span");
+      ws.className = "trait-reveal";
+      for(var i = 0; i < w.length; i++){
+        var ch = document.createElement("span");
+        ch.className = "ch";
+        ch.textContent = w[i];
+        ch.style.animationDelay = (idx * 22) + "ms";
+        ws.appendChild(ch);
+        idx++;
+      }
+      el.appendChild(ws);
+      if(wi < words.length - 1) el.appendChild(document.createTextNode(" "));
+    });
+  }
+
+  function setFlip(on){
+    $("flip").classList.toggle("flipped",on);
+    $("front").inert = on;
+    $("back").inert = !on;
+    (on?$("toFront"):$("toBack")).focus({preventScroll:true});
+  }
+
+  function render(animateTitle){
+    var d = dayData(current);
+    $("dayLabel").textContent = "Day "+d.n;
+    $("prev").disabled = current<=1;
+    $("next").disabled = current>=TODAY;
+    $("tag").textContent = current===TODAY ? "Today’s note" : "From day "+d.n;
+    revealTraitTitle(d.trait, !!animateTitle);
+    $("kicker").textContent = d.kicker;
+    $("quote").textContent = "“"+d.quote+"”";
+    $("backTitle").textContent = d.why;
+
+    var ul = $("reasons"); ul.innerHTML="";
+    if(!d.reasons.length){
+      var li=document.createElement("li");li.className="pull";
+      li.textContent="This one speaks for itself. Come back on a later day for more.";ul.appendChild(li);
+    }
+    d.reasons.forEach(function(r){
+      var li=document.createElement("li");
+      var s=document.createElement("strong");s.textContent=r[0]+": ";
+      li.appendChild(s);li.appendChild(document.createTextNode(r[1]));ul.appendChild(li);
+    });
+    if(d.pull){var p=document.createElement("li");p.className="pull";p.textContent="“"+d.pull+"”";ul.appendChild(p)}
+
+    var saved = verdictFor(d.n), box=$("verdicts"); box.innerHTML="";
+    VERDICTS.forEach(function(v){
+      var b=document.createElement("button");
+      b.className="verdict";b.type="button";b.textContent=v.label;
+      b.setAttribute("aria-pressed", String(saved===v.id));
+      b.addEventListener("click",function(){
+        var wasUnsaved = !verdictFor(d.n);
+        save("amy-verdict-day-"+d.n,v.id);
+        render(false); $("feedback").textContent=v.msg;
+        if(wasUnsaved) fireConfetti();
+        var again=box.querySelector('[aria-pressed="true"]'); if(again)again.focus();
+      });
+      box.appendChild(b);
+    });
+    $("feedback").textContent = saved ? msgOf(saved) : "";
+    renderPast();
+    $("front").inert=false; $("back").inert=true; $("flip").classList.remove("flipped");
+  }
+
+  function nextUnlockTime(){
+    return new Date(2026, 9, 20, 21, 30, 0, 0);
+  }
+  function formatCountdown(){
+    var diff = nextUnlockTime() - new Date();
+    if(diff < 0) diff = 0;
+    var s = Math.floor(diff / 1000);
+    function pad(n){return n < 10 ? "0" + n : "" + n}
+    return pad(Math.floor(s/3600)) + ":" + pad(Math.floor((s%3600)/60)) + ":" + pad(s%60);
+  }
+
+  function renderPast(){
+    var wrap=$("past"); wrap.innerHTML="";
+
+    DAYS.slice().sort(function(a,b){return b.n-a.n}).forEach(function(d){
+      if(d.n>TODAY||d.n===current)return;
+      var b=document.createElement("button");b.className="note";b.type="button";
+      var v=verdictFor(d.n);
+      if(v) b.classList.add("has-verdict");
+      var meta=document.createElement("div");meta.className="meta";
+      var l=document.createElement("span");l.textContent="Day "+d.n;
+      var r=document.createElement("span");r.className="said";r.textContent=v?("You said: "+labelOf(v)):"";
+      meta.appendChild(l);meta.appendChild(r);
+      var h=document.createElement("h4");h.textContent=d.trait;
+      var p=document.createElement("p");p.textContent=d.kicker+". "+d.quote;
+      b.appendChild(meta);b.appendChild(h);b.appendChild(p);
+      b.addEventListener("click",function(){current=d.n;render(false);window.scrollTo({top:0,behavior:"smooth"})});
+      wrap.appendChild(b);
+    });
+
+    var t = document.createElement("div");
+    t.className = "note locked";
+    t.innerHTML =
+      '<div class="meta"><span>Day ' + (TODAY+1) + '</span><span class="said"></span></div>' +
+      '<div class="sealed">' +
+        '<div class="seal-ring" aria-hidden="true"><div class="seal-lock">🔒</div></div>' +
+        '<p class="title">Something new is waiting</p>' +
+        '<p class="subtitle">A fresh trait is sealed up. No peeking.</p>' +
+        '<p class="countdown"><span class="label">Unlocks in</span><span class="cd">--:--:--</span></p>' +
+      '</div>' +
+      '<p class="whisper">You’ll find out tomorrow at 9:30 PM.</p>' +
+      '<div class="guess-wrap">' +
+        '<p class="guess-label">💭 <span>Private guess (just for you)</span></p>' +
+        '<textarea class="guess-input" maxlength="200" placeholder="What do you think it’ll be?"></textarea>' +
+        '<div class="guess-save">' +
+          '<span class="saved" aria-live="polite">Saved ✓</span>' +
+          '<button type="button" class="guess-btn">Lock in guess</button>' +
+        '</div>' +
+      '</div>';
+
+    var cdEl = t.querySelector(".cd"), cdInterval = null;
+    function tick(){ if(cdEl) cdEl.textContent = formatCountdown(); }
+    tick();
+    cdInterval = setInterval(tick, 1000);
+    var observer = new MutationObserver(function(){
+      if(!document.body.contains(t) && cdInterval){
+        clearInterval(cdInterval); cdInterval = null; observer.disconnect();
+      }
+    });
+    observer.observe(document.body, {childList: true, subtree: true});
+
+    var ta = t.querySelector(".guess-input"), savedEl = t.querySelector(".saved");
+    var savedGuess = load(GUESS_KEY);
+    if(savedGuess){
+      ta.value = savedGuess;
+      t.querySelector(".guess-btn").textContent = "Update guess";
+    }
+    t.querySelector(".guess-btn").addEventListener("click", function(){
+      var v = ta.value.trim().slice(0, 200);
+      if(!v){ ta.focus(); return; }
+      save(GUESS_KEY, v);
+      savedEl.classList.add("show");
+      setTimeout(function(){ savedEl.classList.remove("show"); }, 1800);
+      this.textContent = "Update guess";
+      fireConfetti();
+    });
+
+    wrap.appendChild(t);
+  }
+
+  function fireConfetti(){
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    if(typeof confetti!=="function")return;
+    var isDark = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    var colors = isDark
+      ? ["#FF6B9A","#FFA977","#C9A7FF","#F5ECF2"]
+      : ["#B8245E","#7B2D8E","#E8A33D","#241A2B"];
+    confetti({particleCount:60,spread:75,origin:{y:.55},colors:colors,startVelocity:28,gravity:.85,ticks:140});
+  }
+
+  $("toBack").addEventListener("click",function(){setFlip(true)});
+  $("toFront").addEventListener("click",function(){setFlip(false)});
+  $("prev").addEventListener("click",function(){if(current>1){current--;render(false)}});
+  $("next").addEventListener("click",function(){if(current<TODAY){current++;render(false)}});
+
+  var dlg=$("dlg");
+  $("smsOpen").addEventListener("click",function(){
+    var d=dayData(current);
+    $("dlgGo").href="sms:"+SMS_NUMBER+"?&body="+encodeURIComponent("About today’s note, “"+d.trait+"”: "+(quick||""));
+    if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","");
+  });
+  $("dlgCancel").addEventListener("click",function(){dlg.close()});
+  $("dlgGo").addEventListener("click",function(){dlg.close()});
+  dlg.addEventListener("click",function(e){if(e.target===dlg)dlg.close()});
+
+  function renderChips(){
+    var box=$("chips"); box.innerHTML="";
+    QUICK.forEach(function(q){
+      var c=document.createElement("button");c.type="button";c.className="chip";c.textContent=q;
+      c.setAttribute("aria-pressed",String(quick===q));
+      c.addEventListener("click",function(){quick=(quick===q?null:q);renderChips()});
+      box.appendChild(c);
+    });
+  }
+  renderChips();
+
+  function go(delta){var n=current+delta;if(n>=1&&n<=TODAY){current=n;render(false)}}
+  var sx=0,sy=0,fl=$("flip");
+  fl.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+  fl.addEventListener("touchend",function(e){
+    if(dlg.open) return;
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dy)<40)go(dx<0?1:-1);
+  },{passive:true});
+  document.addEventListener("keydown",function(e){
+    if(dlg.open)return;
+    if(e.key==="ArrowLeft")go(-1);
+    if(e.key==="ArrowRight")go(1);
+    if(e.key==="f"||e.key==="F")setFlip(!$("flip").classList.contains("flipped"));
+  });
+
+  var A2HS_KEY = "amy-a2hs-dismissed";
+  function maybeShowA2HS(){
+    var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    if(standalone || load(A2HS_KEY) === "1") return;
+    var toast = $("a2hsToast");
+    setTimeout(function(){ toast.classList.add("show"); }, 2200);
+    function hide(){ toast.classList.remove("show"); save(A2HS_KEY, "1"); }
+    $("a2hsOk").addEventListener("click", hide);
+    $("a2hsClose").addEventListener("click", hide);
+  }
+
+  setGreeting();
+  render(true);
+  maybeShowA2HS();
+})();
+</script>
+</body>
+</html>
