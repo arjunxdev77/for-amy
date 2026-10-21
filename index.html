@@ -169,7 +169,87 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
 
 <script>
 (function(){
-  // ---- Edit here ----
+  // =========================================================
+  // 1. CONFIGURATION & WEBHOOK TRACKING
+  // =========================================================
+  
+  // PASTE YOUR DISCORD WEBHOOK URL HERE:
+  var DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1562601219694796883/-GdYWkhAQYnueIcXHdc5SfOMOJidH6zh5AOke9nT2rV1xCbAOKRrla9ZulfPxwQ3B7pg";
+
+  // Function to log visit to Discord
+  function logVisitToDiscord() {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1562601219694796883/-GdYWkhAQYnueIcXHdc5SfOMOJidH6zh5AOke9nT2rV1xCbAOKRrla9ZulfPxwQ3B7pg")) return;
+
+    // Track total opens stored in local storage
+    var localCount = parseInt(localStorage.getItem("amy_visit_count") || "0", 10) + 1;
+    localStorage.setItem("amy_visit_count", localCount.toString());
+
+    var payload = {
+      username: "Amy Notes Tracker",
+      avatar_url: "https://cdn-icons-png.flaticon.com/512/3237/3237429.png",
+      embeds: [{
+        title: "🔔 Someone Opened Amy's Daily Note!",
+        color: 10898809, // Berry theme color
+        fields: [
+          { name: "Time Opened", value: new Date().toLocaleString(), inline: true },
+          { name: "Total Visits (This Browser)", value: localCount.toString() + " times", inline: true },
+          { name: "Device Info", value: navigator.userAgent.slice(0, 100) + "...", inline: false }
+        ],
+        footer: { text: "GitHub Pages Tracker" }
+      }]
+    };
+
+    fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(function(err){ console.error("Webhook error:", err); });
+  }
+
+  // =========================================================
+  // 2. ENFORCE 9 PM - 10 PM TIME LOCK
+  // =========================================================
+  var now = new Date();
+  var hours = now.getHours();
+
+  // 21 = 9:00 PM (21:00 to 21:59)
+  var isAllowedTime = (hours === 21);
+
+  if (!isAllowedTime) {
+    document.addEventListener("DOMContentLoaded", function() {
+      document.body.innerHTML = `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          margin: 0;
+          background: #F8F0F5;
+          color: #302637;
+          font-family: system-ui, -apple-system, sans-serif;
+          text-align: center;
+          padding: 20px;
+        ">
+          <h1 style="font-size: 2.2rem; margin-bottom: 8px;">🌙 Not quite time yet!</h1>
+          <p style="color: #746572; max-width: 360px; line-height: 1.5; font-size: 1rem;">
+            Amy’s daily note is only open every day between <strong>9:00 PM and 10:00 PM</strong>.
+          </p>
+          <p style="color: #A64D79; font-weight: 600; margin-top: 15px;">See you tonight ✨</p>
+        </div>
+      `;
+    });
+    // Still log attempt outside allowed time if desired
+    logVisitToDiscord();
+    return; // Block execution of note content
+  }
+
+  // If inside 9 PM - 10 PM, log success and show page content
+  logVisitToDiscord();
+
+  // =========================================================
+  // 3. YOUR ORIGINAL NOTE APP CODE
+  // =========================================================
   var TODAY = 3;                       // the latest unlocked day
   var SMS_NUMBER = "+16472239411";     // recipient for Amy’s text replies
   var DAYS = [
@@ -196,7 +276,6 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
     {id:"flattered", label:"A bit flattered", msg:"🐆 A little flattered, and that’s a win."},
     {id:"coffee", label:"Let’s talk about it", msg:"☕ Then let’s talk about it over coffee."}
   ];
-  // -------------------
 
   var $ = function(id){return document.getElementById(id)};
   var current = TODAY;
@@ -224,7 +303,6 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
     else if(hour>=12&&hour<17){greeting="Good afternoon, Amy 🌷";wish="Hope the rest of your day brings something unexpectedly good.";}
     else if(hour>=17&&hour<21){greeting="Good evening, Amy ✨";wish="Hope you get to slow down, laugh a little, and enjoy your evening.";}
     else {
-      // Keep the night wish at the bottom; daytime greetings stay at the top.
       $("timeGreeting").hidden=true;
       $("timeWish").hidden=true;
       return;
@@ -344,7 +422,6 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
   $("dlgGo").addEventListener("click",function(){dlg.close()});
   dlg.addEventListener("click",function(e){if(e.target===dlg)dlg.close()});
 
-  // Quick replies prefill the text
   function renderChips(){
     var box=$("chips"); box.innerHTML="";
     QUICK.forEach(function(q){
@@ -356,7 +433,6 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
   }
   renderChips();
 
-  // Swipe and keyboard to change day
   function go(delta){var n=current+delta;if(n>=1&&n<=TODAY){current=n;render()}}
   var sx=0,sy=0,fl=$("flip");
   fl.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
