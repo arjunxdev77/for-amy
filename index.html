@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Amy’s daily note</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+:root{
+  --bg:#F8F0F5; --surface:#FFFAFD; --ink:#302637; --muted:#746572; --line:#E9D5E2;
+  --accent:#A64D79; --accent-ink:#ffffff; --soft:#F0E2EB; --ok:#607D68; --accent2:#D58B9C; --glow:#F4DCE7; --tint:#E6DDF2;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{color-scheme:light}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:radial-gradient(ellipse at 8% 0%,var(--glow),transparent 36%),radial-gradient(ellipse at 100% 22%,var(--tint),transparent 32%),var(--bg);background-attachment:fixed;color:var(--ink);font:17px/1.55 "Iowan Old Style","Palatino Linotype",Georgia,serif;-webkit-font-smoothing:antialiased}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+h1,h2,h3,button,.ui{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.theme-toggle{border:1px solid var(--line);background:linear-gradient(135deg,var(--surface),var(--glow));color:var(--ink);border-radius:99px;padding:9px 13px;cursor:pointer;font-size:.82rem;font-weight:650;box-shadow:0 4px 14px rgba(38,50,56,.06)}
+.theme-toggle:hover{transform:translateY(-1px);border-color:var(--accent)}
+h1{margin:0;font-size:2rem;line-height:1.1;letter-spacing:-.02em}
+header p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+.time-greeting{display:inline-block;margin:0 0 8px;padding:6px 11px;border-radius:99px;background:linear-gradient(120deg,var(--glow),var(--tint));color:var(--accent);font:700 .78rem/1.3 system-ui,sans-serif;letter-spacing:.01em}
+.time-wish{max-width:390px;margin:8px 0 0;color:var(--muted);font-size:.9rem;line-height:1.5}
+.night-wish{margin:22px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(125deg,var(--surface),var(--glow));color:var(--muted);font: .92rem/1.55 system-ui,sans-serif}
+.night-wish strong{display:block;margin-bottom:4px;color:var(--accent);font-size:.96rem}
+.night-wish p{margin:0}
+.day-nav{display:flex;align-items:center;gap:6px;font:600 .85rem/1 system-ui,sans-serif;color:var(--muted)}
+.day-nav button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:1rem}
+.day-nav button:disabled{opacity:.35;cursor:default}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* The one memorable thing: the flip card */
+.flip{perspective:1600px}
+.flip-inner{display:grid;transition:transform .6s cubic-bezier(.3,1.2,.5,1);transform-style:preserve-3d}
+.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:26px 24px;display:flex;flex-direction:column;box-shadow:0 18px 44px -18px rgba(38,50,56,.25),0 0 0 1px color-mix(in srgb,var(--accent) 8%,transparent)}
+.face.back{transform:rotateY(180deg)}
+.tag{align-self:flex-start;font:650 .8rem/1 system-ui,sans-serif;color:var(--accent);background:linear-gradient(120deg,var(--soft),var(--glow));padding:8px 13px;border-radius:99px}
+.card-actions{display:flex;gap:2px}
+.card-top{display:flex;justify-content:space-between;align-items:center}
+.icon-btn{border:0;background:transparent;color:var(--muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem}
+.icon-btn:hover{background:var(--soft);color:var(--accent)}
+.trait{font:850 clamp(2.15rem,8.5vw,3.2rem)/1.12 system-ui,sans-serif;letter-spacing:-.035em;margin:18px 0 6px;padding:0 0 .08em;overflow:visible;overflow-wrap:break-word;hyphens:auto;background:linear-gradient(105deg,var(--ink) 8%,var(--accent) 58%,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font:.92rem/1.4 system-ui,sans-serif;margin:0}
+.quote{margin:18px 0 0;font-size:1.08rem;line-height:1.65}
+.spacer{flex:1;min-height:22px}
+.ask{font:600 .9rem/1 system-ui,sans-serif;color:var(--muted);margin:0 0 10px}
+.verdicts{display:flex;flex-wrap:wrap;gap:8px}
+.verdict{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:11px 16px;font-size:.92rem;font-weight:500;cursor:pointer;transition:transform .15s,background .15s,border-color .15s}
+.verdict:hover{border-color:var(--accent)}
+.verdict:active{transform:scale(.97)}
+.verdict[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.feedback{min-height:1.4em;margin:10px 0 0;color:var(--accent);font:600 .88rem/1.4 system-ui,sans-serif}
+.back h2{margin:16px 0 14px;font-size:1.5rem;letter-spacing:-.01em}
+.reasons{margin:0;padding:0;list-style:none;display:grid;gap:14px;font-size:.98rem}
+.reasons strong{font-family:system-ui,sans-serif}
+.pull{color:var(--muted);font-style:italic}
+
+/* History */
+h3.sec{margin:34px 4px 12px;font-size:1rem;color:var(--muted);font-weight:700}
+.progress-wrap{display:flex;align-items:center;gap:12px;margin:18px 4px 0;font:600 .76rem system-ui,sans-serif;color:var(--muted)}
+.progress-track{height:7px;flex:1;background:var(--line);border-radius:99px;overflow:hidden}
+.progress-track span{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),#8FAF9A,#C58DB4);border-radius:99px;transition:width .35s ease}
+.past{display:grid;gap:10px}
+.note{width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;color:inherit;cursor:pointer;font:inherit}
+.note:hover{border-color:var(--accent)}
+.note[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--soft)}
+.note h4{margin:0;font:700 1.02rem/1.3 system-ui,sans-serif}
+.note p{margin:4px 0 0;color:var(--muted);font-size:.93rem;line-height:1.5}
+.note .meta{display:flex;justify-content:space-between;gap:8px;font:.8rem/1.2 system-ui,sans-serif;color:var(--muted);margin-bottom:6px}
+.note .said{color:var(--ok);font-weight:600}
+.locked{border-style:dashed;color:var(--muted);text-align:center;cursor:default;background:transparent}
+.locked:hover{border-color:var(--line)}
+
+footer{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+footer p{margin:0;font:600 .95rem/1.3 system-ui,sans-serif}
+footer small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.cta{background:linear-gradient(110deg,var(--accent),#9C5A7D,var(--accent2));color:var(--accent-ink);border:0;border-radius:99px;padding:12px 22px;font-weight:600;font-size:.95rem;text-decoration:none;cursor:pointer}
+dialog{border:1px solid var(--line);border-radius:24px;background:var(--surface);color:var(--ink);padding:24px;max-width:340px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(15,20,35,.45);backdrop-filter:blur(6px)}
+dialog h4{margin:0 0 6px;font:700 1.2rem system-ui,sans-serif}
+dialog p{margin:0;color:var(--muted);font-size:.95rem}
+.row{display:flex;gap:10px;margin-top:20px}
+.row>*{flex:1;text-align:center}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:99px;padding:12px;font-weight:500;cursor:pointer;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:9px 14px;font:500 .88rem system-ui,sans-serif;cursor:pointer}
+.chip:hover{border-color:var(--accent);background:var(--glow)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.locked .chips{justify-content:center;margin-top:10px}
+.locked .chip{cursor:pointer}
+.hint{text-align:center;color:var(--muted);font:.8rem/1 system-ui,sans-serif;margin:12px 0 0}
+@media (max-width:430px){main{padding:20px 13px 32px}.face{padding:20px 16px}.day-nav{margin-left:auto}.theme-toggle{order:3}.progress-wrap{font-size:.7rem}.trait{font-size:clamp(2rem,8vw,2.55rem);line-height:1.16;letter-spacing:-.03em;margin-top:16px;margin-bottom:7px;padding-bottom:.12em}.sub{font-size:.88rem;line-height:1.45}.quote{font-size:1rem;line-height:1.6}.time-wish{max-width:100%;font-size:.88rem;line-height:1.5}.night-wish{padding:14px 15px;margin-top:18px}}
+@media (prefers-reduced-motion:reduce){.flip-inner{transition:none}.verdict{transition:none}*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <p class="time-greeting" id="timeGreeting" aria-live="polite">Good evening, Amy ✨</p>
+      <h1>Hey Amy 👋</h1>
+      <p>One small thing I noticed about you, every day.</p>
+      <p class="time-wish" id="timeWish">Hope your evening brings a little calm and something to smile about.</p>
+    </div>
+    <button class="theme-toggle ui" id="themeToggle" type="button" aria-label="Change colour mood" title="Change colour mood">✦ Colours</button>
+    <nav class="day-nav" aria-label="Choose a day">
+      <button id="prev" aria-label="Previous day">‹</button>
+      <span id="dayLabel">Day 2</span>
+      <button id="next" aria-label="Next day">›</button>
+    </nav>
+  </header>
+
+  <section class="flip" id="flip" aria-live="polite">
+    <div class="flip-inner">
+      <article class="face front" id="front">
+        <div class="card-top">
+          <span class="tag" id="tag">Today’s note</span>
+          <div class="card-actions"><button class="icon-btn" id="copyNote" aria-label="Copy this note" title="Copy this note">⧉</button><button class="icon-btn" id="toBack" aria-label="Why this trait?" title="Flip card">↻</button></div>
+        </div>
+        <h2 class="trait" id="trait"></h2>
+        <p class="sub" id="kicker"></p>
+        <p class="quote" id="quote"></p>
+        <div class="spacer"></div>
+        <p class="ask">How does that land?</p>
+        <div class="verdicts" id="verdicts" role="group" aria-label="Your reaction"></div>
+        <p class="feedback" id="feedback"></p>
+      </article>
+
+      <article class="face back" id="back">
+        <div class="card-top">
+          <span class="tag">Why this one</span>
+          <button class="icon-btn" id="toFront" aria-label="Back to the note">↺</button>
+        </div>
+        <h2 id="backTitle"></h2>
+        <ul class="reasons" id="reasons"></ul>
+      </article>
+    </div>
+  </section>
+
+  <div class="progress-wrap" aria-label="Your note journey"><div class="progress-track"><span id="progressFill"></span></div><span id="progressLabel">Day 3 of your story</span></div>
+  <p class="hint">Flip the card, try a reaction, mix up the colours, and make a guess for tomorrow ✦</p>
+
+  <h3 class="sec">Earlier notes</h3>
+  <div class="past" id="past"></div>
+
+  <footer>
+    <p>Got a thought on this one?<small>Reply and I’ll see it right away.</small></p>
+    <div class="chips" id="chips" role="group" aria-label="Quick replies"></div>
+    <button class="cta" id="smsOpen">Reply by text</button>
+  </footer>
+  <section class="night-wish" aria-label="Good night wish">
+    <strong>Good night, Amy 🌙</strong>
+    <p>Hope the day leaves you with something good to remember, and that tomorrow brings you a fresh reason to smile.</p>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <h4>Open Messages?</h4>
+  <p>Your messaging app will open with a reply to today’s note ready to go.</p>
+  <div class="row">
+    <button class="ghost" id="dlgCancel">Cancel</button>
+    <a class="cta" id="dlgGo" href="#">Open Messages</a>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  // ---- Edit here ----
+  var TODAY = 3;                       // the latest unlocked day
+  var SMS_NUMBER = "+16472239411";     // recipient for Amy’s text replies
+  var DAYS = [
+    {n:1, trait:"She has a very calm energy", kicker:"A grounding presence",
+     quote:"Unhurried and quietly confident, the kind of calm that makes everything around you feel a little more okay.",
+     why:"Calm energy", reasons:[]},
+    {n:2, trait:"She’s edgy", kicker:"Bold spirit, leather jacket edition",
+     quote:"There’s an effortless cool in the way you carry yourself today, Amy. The jacket is just the surface. It’s the quiet confidence and fearless energy underneath that makes you unforgettable.",
+     why:"The edge is real.", reasons:[
+      ["Fearless energy","You don’t wait for permission to be bold. You just are."],
+      ["Quiet strength","Edgy doesn’t mean loud. It means sure of yourself."],
+      ["Magnetic presence","People notice the way you own a room without trying."]],
+     pull:"It’s not the jacket. It’s the girl wearing it."},
+    {n:3, trait:"She’s witty", kicker:"Quick mind, quicker comeback",
+     quote:"You have that kind of wit that catches people off guard—in the best way. A perfectly timed comment, a clever little comeback, and suddenly you’ve made the whole moment more fun. You’re funny without trying too hard, and that’s what makes it stick.",
+     why:"Your timing is half the magic.", reasons:[
+      ["Quick thinking","You connect the dots fast and come back with something clever."],
+      ["Playful confidence","You can tease and joke without making it feel forced."],
+      ["Great timing","It’s not just what you say—it’s when you say it."]],
+     pull:"Some people make conversation. You make it entertaining."}
+  ];
+  var VERDICTS = [
+    {id:"spot-on", label:"Spot on", msg:"🎯 Spot on. She knows it."},
+    {id:"flattered", label:"A bit flattered", msg:"🐆 A little flattered, and that’s a win."},
+    {id:"coffee", label:"Let’s talk about it", msg:"☕ Then let’s talk about it over coffee."}
+  ];
+  // -------------------
+
+  var $ = function(id){return document.getElementById(id)};
+  var current = TODAY;
+  var GUESSES = ["Her laugh", "Her style", "Her kindness", "Her curiosity"];
+  var QUICK = ["Ha, accurate", "Okay, I’ll allow it", "Tell me more"];
+  var quick = null;
+  var THEMES = [
+    {name:"Berry",accent:"#A64D79",accent2:"#D58B9C",glow:"#F4DCE7",tint:"#E6DDF2",soft:"#F0E2EB",bg:"#F8F0F5",surface:"#FFFAFD",ink:"#302637",line:"#E9D5E2"},
+    {name:"Terracotta",accent:"#B76E52",accent2:"#C6A15B",glow:"#F0D8CB",tint:"#DCE8DE",soft:"#E4EAE0",bg:"#F5F0E8",surface:"#FFFCF7",ink:"#263238",line:"#E4D8CA"},
+    {name:"Ocean",accent:"#287F91",accent2:"#E2A84A",glow:"#D6EEF0",tint:"#DCE8FA",soft:"#DDEEF0",bg:"#EFF7F7",surface:"#FCFFFF",ink:"#20343B",line:"#D0E3E5"},
+    {name:"Lavender",accent:"#7963B5",accent2:"#D58A73",glow:"#E8DFF8",tint:"#F4DFE7",soft:"#E9E3F6",bg:"#F5F1FB",surface:"#FFFCFF",ink:"#2E2940",line:"#DFD7EF"},
+    {name:"Citrus",accent:"#7B8B35",accent2:"#E69A36",glow:"#F5E9AE",tint:"#DCECCF",soft:"#EAF0CF",bg:"#FBF8E9",surface:"#FFFFF7",ink:"#343923",line:"#E8E1BD"},
+    {name:"Midnight",accent:"#6B65B5",accent2:"#E17D9A",glow:"#D9D6F7",tint:"#F1D8E5",soft:"#E4E0F7",bg:"#F0EFFA",surface:"#FCFBFF",ink:"#29263E",line:"#DCD8F0"}
+  ];  var themeIndex = 0;
+
+  function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function verdictFor(n){return load("amy-verdict-day-"+n)}
+  function labelOf(id){for(var i=0;i<VERDICTS.length;i++)if(VERDICTS[i].id===id)return VERDICTS[i].label;return ""}
+  function msgOf(id){for(var i=0;i<VERDICTS.length;i++)if(VERDICTS[i].id===id)return VERDICTS[i].msg;return ""}
+  function dayData(n){for(var i=0;i<DAYS.length;i++)if(DAYS[i].n===n)return DAYS[i]}
+  function updateTimeGreeting(){
+    var hour=new Date().getHours(), greeting, wish;
+    if(hour>=5&&hour<12){greeting="Good morning, Amy ☀️";wish="Hope your morning starts gently and gives you a reason to smile.";}
+    else if(hour>=12&&hour<17){greeting="Good afternoon, Amy 🌷";wish="Hope the rest of your day brings something unexpectedly good.";}
+    else if(hour>=17&&hour<21){greeting="Good evening, Amy ✨";wish="Hope you get to slow down, laugh a little, and enjoy your evening.";}
+    else {
+      // Keep the night wish at the bottom; daytime greetings stay at the top.
+      $("timeGreeting").hidden=true;
+      $("timeWish").hidden=true;
+      return;
+    }
+    $("timeGreeting").hidden=false;
+    $("timeWish").hidden=false;
+    $("timeGreeting").textContent=greeting;
+    $("timeGreeting").title=wish;
+    $("timeGreeting").setAttribute("aria-label",greeting+". "+wish);
+    $("timeWish").textContent=wish;
+  }
+
+  function setFlip(on){
+    $("flip").classList.toggle("flipped",on);
+    $("front").inert = on;
+    $("back").inert = !on;
+    (on?$("toFront"):$("toBack")).focus({preventScroll:true});
+  }
+
+  function render(){
+    var d = dayData(current);
+    $("dayLabel").textContent = "Day "+d.n;
+    $("prev").disabled = current<=1;
+    $("next").disabled = current>=TODAY;
+    $("tag").textContent = current===TODAY ? "Today’s note" : "From day "+d.n;
+    $("trait").textContent = d.trait;
+    $("kicker").textContent = d.kicker;
+    $("quote").textContent = "“"+d.quote+"”";
+    $("backTitle").textContent = d.why;
+    $("progressFill").style.width = (d.n/TODAY*100)+"%";
+    $("progressLabel").textContent = "Day "+d.n+" of "+TODAY+" in your story";
+
+    var ul = $("reasons"); ul.innerHTML="";
+    if(!d.reasons.length){
+      var li=document.createElement("li");li.className="pull";
+      li.textContent="This one speaks for itself. Come back on a later day for more.";ul.appendChild(li);
+    }
+    d.reasons.forEach(function(r){
+      var li=document.createElement("li");
+      var s=document.createElement("strong");s.textContent=r[0]+": ";
+      li.appendChild(s);li.appendChild(document.createTextNode(r[1]));ul.appendChild(li);
+    });
+    if(d.pull){var p=document.createElement("li");p.className="pull";p.textContent="“"+d.pull+"”";ul.appendChild(p)}
+
+    var saved = verdictFor(d.n), box=$("verdicts"); box.innerHTML="";
+    VERDICTS.forEach(function(v){
+      var b=document.createElement("button");
+      b.className="verdict";b.type="button";b.textContent=v.label;
+      b.setAttribute("aria-pressed", String(saved===v.id));
+      b.addEventListener("click",function(){
+        save("amy-verdict-day-"+d.n,v.id);
+        render(); $("feedback").textContent=v.msg; fireConfetti();
+        var again=box.querySelector('[aria-pressed="true"]'); if(again)again.focus();
+      });
+      box.appendChild(b);
+    });
+    $("feedback").textContent = saved ? msgOf(saved) : "";
+    renderPast();
+    $("front").inert=false; $("back").inert=true; $("flip").classList.remove("flipped");
+  }
+
+  function renderPast(){
+    var wrap=$("past"); wrap.innerHTML="";
+    DAYS.slice().sort(function(a,b){return b.n-a.n}).forEach(function(d){
+      if(d.n>TODAY||d.n===current)return;
+      var b=document.createElement("button");b.className="note";b.type="button";
+      var v=verdictFor(d.n);
+      var meta=document.createElement("div");meta.className="meta";
+      var l=document.createElement("span");l.textContent="Day "+d.n;
+      var r=document.createElement("span");r.className="said";r.textContent=v?("You said: "+labelOf(v)):"";
+      meta.appendChild(l);meta.appendChild(r);
+      var h=document.createElement("h4");h.textContent=d.trait;
+      var p=document.createElement("p");p.textContent=d.kicker+". "+d.quote;
+      b.appendChild(meta);b.appendChild(h);b.appendChild(p);
+      b.addEventListener("click",function(){current=d.n;render();window.scrollTo({top:0,behavior:"smooth"})});
+      wrap.appendChild(b);
+    });
+    var t=document.createElement("div");t.className="note locked";
+    t.innerHTML="<h4></h4><p></p><div class='chips'></div>";
+    t.querySelector("h4").textContent="Day "+(TODAY+1)+" unlocks tomorrow";
+    var gk="amy-guess-day-"+(TODAY+1), g=load(gk);
+    t.querySelector("p").textContent=g?("Locked in: "+g+". We’ll see tomorrow."):"Guess what I’ll notice next:";
+    GUESSES.forEach(function(x){
+      var c=document.createElement("button");c.type="button";c.className="chip";c.textContent=x;
+      c.setAttribute("aria-pressed",String(g===x));
+      c.addEventListener("click",function(){save(gk,x);renderPast();fireConfetti()});
+      t.querySelector(".chips").appendChild(c);
+    });
+    wrap.appendChild(t);
+  }
+
+  function fireConfetti(){
+    if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    if(typeof confetti!=="function")return;
+    confetti({particleCount:60,spread:75,origin:{y:.55},colors:["#A64D79","#D58B9C","#7963B5","#E2A84A"],startVelocity:28,gravity:.85,ticks:140});
+  }
+
+  $("themeToggle").textContent="✦ Berry";
+  $("themeToggle").addEventListener("click",function(){
+    themeIndex=(themeIndex+1)%THEMES.length;var t=THEMES[themeIndex],root=document.documentElement;
+    Object.keys(t).forEach(function(k){if(k!=="name")root.style.setProperty("--"+k,t[k])});
+    $("themeToggle").textContent="✦ "+t.name;fireConfetti();
+  });
+  $("copyNote").addEventListener("click",function(){var d=dayData(current);copyText(d.trait+"\n\n"+d.quote,$("feedback"));});
+  $("toBack").addEventListener("click",function(){setFlip(true)});
+  $("toFront").addEventListener("click",function(){setFlip(false)});
+  $("prev").addEventListener("click",function(){if(current>1){current--;render()}});
+  $("next").addEventListener("click",function(){if(current<TODAY){current++;render()}});
+
+  var dlg=$("dlg");
+  $("smsOpen").addEventListener("click",function(){
+    var d=dayData(current);
+    $("dlgGo").href="sms:"+SMS_NUMBER+"?&body="+encodeURIComponent("About today’s note, “"+d.trait+"”: "+(quick||""));
+    if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","");
+  });
+  $("dlgCancel").addEventListener("click",function(){dlg.close()});
+  $("dlgGo").addEventListener("click",function(){dlg.close()});
+  dlg.addEventListener("click",function(e){if(e.target===dlg)dlg.close()});
+
+  // Quick replies prefill the text
+  function renderChips(){
+    var box=$("chips"); box.innerHTML="";
+    QUICK.forEach(function(q){
+      var c=document.createElement("button");c.type="button";c.className="chip";c.textContent=q;
+      c.setAttribute("aria-pressed",String(quick===q));
+      c.addEventListener("click",function(){quick=(quick===q?null:q);renderChips()});
+      box.appendChild(c);
+    });
+  }
+  renderChips();
+
+  // Swipe and keyboard to change day
+  function go(delta){var n=current+delta;if(n>=1&&n<=TODAY){current=n;render()}}
+  var sx=0,sy=0,fl=$("flip");
+  fl.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+  fl.addEventListener("touchend",function(e){
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dy)<40)go(dx<0?1:-1);
+  },{passive:true});
+  document.addEventListener("keydown",function(e){
+    if(dlg.open)return;
+    if(e.key==="ArrowLeft")go(-1);
+    if(e.key==="ArrowRight")go(1);
+    if(e.key==="f"||e.key==="F")setFlip(!$("flip").classList.contains("flipped"));
+  });
+
+  updateTimeGreeting();
+  render();
+})();
+</script>
+</body>
+</html>
