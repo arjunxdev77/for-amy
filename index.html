@@ -173,14 +173,12 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
   // 1. CONFIGURATION & WEBHOOK TRACKING
   // =========================================================
   
-  // PASTE YOUR DISCORD WEBHOOK URL HERE:
   var DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1562601219694796883/-GdYWkhAQYnueIcXHdc5SfOMOJidH6zh5AOke9nT2rV1xCbAOKRrla9ZulfPxwQ3B7pg";
 
   // Function to log visit to Discord
   function logVisitToDiscord() {
-    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1562601219694796883/-GdYWkhAQYnueIcXHdc5SfOMOJidH6zh5AOke9nT2rV1xCbAOKRrla9ZulfPxwQ3B7pg")) return;
+    if (!DISCORD_WEBHOOK_URL) return;
 
-    // Track total opens stored in local storage
     var localCount = parseInt(localStorage.getItem("amy_visit_count") || "0", 10) + 1;
     localStorage.setItem("amy_visit_count", localCount.toString());
 
@@ -189,7 +187,7 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
       avatar_url: "https://cdn-icons-png.flaticon.com/512/3237/3237429.png",
       embeds: [{
         title: "🔔 Someone Opened Amy's Daily Note!",
-        color: 10898809, // Berry theme color
+        color: 10898809,
         fields: [
           { name: "Time Opened", value: new Date().toLocaleString(), inline: true },
           { name: "Total Visits (This Browser)", value: localCount.toString() + " times", inline: true },
@@ -212,7 +210,6 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
   var now = new Date();
   var hours = now.getHours();
 
-  // 21 = 9:00 PM (21:00 to 21:59)
   var isAllowedTime = (hours === 21);
 
   if (!isAllowedTime) {
@@ -239,19 +236,17 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
         </div>
       `;
     });
-    // Still log attempt outside allowed time if desired
     logVisitToDiscord();
-    return; // Block execution of note content
+    return;
   }
 
-  // If inside 9 PM - 10 PM, log success and show page content
   logVisitToDiscord();
 
   // =========================================================
-  // 3. YOUR ORIGINAL NOTE APP CODE
+  // 3. YOUR NOTE APP CODE (DAY 4)
   // =========================================================
-  var TODAY = 3;                       // the latest unlocked day
-  var SMS_NUMBER = "+16472239411";     // recipient for Amy’s text replies
+  var TODAY = 4;
+  var SMS_NUMBER = "+16472239411";     
   var DAYS = [
     {n:1, trait:"She has a very calm energy", kicker:"A grounding presence",
      quote:"Unhurried and quietly confident, the kind of calm that makes everything around you feel a little more okay.",
@@ -269,7 +264,14 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
       ["Quick thinking","You connect the dots fast and come back with something clever."],
       ["Playful confidence","You can tease and joke without making it feel forced."],
       ["Great timing","It’s not just what you say—it’s when you say it."]],
-     pull:"Some people make conversation. You make it entertaining."}
+     pull:"Some people make conversation. You make it entertaining."},
+    {n:4, trait:"She loves her own space", kicker:"Beautifully contained in her own world",
+     quote:"There’s something peaceful about how self-contained you are, Amy. You enjoy your own universe, your own rhythm, and having that sacred space to just be. You don't need the noise of the crowd to feel complete.",
+     why:"Your inner world is a nice place to be.", reasons:[
+      ["Graceful independence","You move through life comfortably on your own terms."],
+      ["Thoughtful boundaries","You protect your peace and value your quiet corner of the world."],
+      ["Quiet depth","There’s a whole rich universe in there that you share on your own terms."]],
+     pull:"Some people need constant noise. You find your power in the quiet."}
   ];
   var VERDICTS = [
     {id:"spot-on", label:"Spot on", msg:"🎯 Spot on. She knows it."},
@@ -279,7 +281,7 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
 
   var $ = function(id){return document.getElementById(id)};
   var current = TODAY;
-  var GUESSES = ["Her laugh", "Her style", "Her kindness", "Her curiosity"];
+  var GUESSES = ["Her smile", "Her focus", "Her taste in music", "Her daydreams"];
   var QUICK = ["Ha, accurate", "Okay, I’ll allow it", "Tell me more"];
   var quick = null;
   var THEMES = [
