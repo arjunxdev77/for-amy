@@ -32,7 +32,7 @@ header p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
 .day-nav button:disabled{opacity:.35;cursor:default}
 button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-/* The one memorable thing: the flip card */
+/* The flip card */
 .flip{perspective:1600px}
 .flip-inner{display:grid;transition:transform .6s cubic-bezier(.3,1.2,.5,1);transform-style:preserve-3d}
 .flip.flipped .flip-inner{transform:rotateY(180deg)}
@@ -109,7 +109,7 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
     <button class="theme-toggle ui" id="themeToggle" type="button" aria-label="Change colour mood" title="Change colour mood">✦ Colours</button>
     <nav class="day-nav" aria-label="Choose a day">
       <button id="prev" aria-label="Previous day">‹</button>
-      <span id="dayLabel">Day 2</span>
+      <span id="dayLabel">Day 4</span>
       <button id="next" aria-label="Next day">›</button>
     </nav>
   </header>
@@ -141,7 +141,7 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
     </div>
   </section>
 
-  <div class="progress-wrap" aria-label="Your note journey"><div class="progress-track"><span id="progressFill"></span></div><span id="progressLabel">Day 3 of your story</span></div>
+  <div class="progress-wrap" aria-label="Your note journey"><div class="progress-track"><span id="progressFill"></span></div><span id="progressLabel">Day 4 of your story</span></div>
   <p class="hint">Flip the card, try a reaction, mix up the colours, and make a guess for tomorrow ✦</p>
 
   <h3 class="sec">Earlier notes</h3>
@@ -170,12 +170,10 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
 <script>
 (function(){
   // =========================================================
-  // 1. CONFIGURATION & WEBHOOK TRACKING
+  // 1. CONFIGURATION & DISCORD WEBHOOK TRACKING
   // =========================================================
-  
   var DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1562601219694796883/-GdYWkhAQYnueIcXHdc5SfOMOJidH6zh5AOke9nT2rV1xCbAOKRrla9ZulfPxwQ3B7pg";
 
-  // Function to log visit to Discord
   function logVisitToDiscord() {
     if (!DISCORD_WEBHOOK_URL) return;
 
@@ -205,14 +203,13 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
   }
 
   // =========================================================
-  // 2. ENFORCE 9 PM - 10 PM TIME LOCK
+  // 2. MASTER SWITCH FOR ACCESS
   // =========================================================
-  var now = new Date();
-  var hours = now.getHours();
+  // Change this to `true` when you want to open the site for her.
+  // Change this to `false` when you want it locked.
+  var IS_OPEN = false; 
 
-  var isAllowedTime = (hours === 21);
-
-  if (!isAllowedTime) {
+  if (!IS_OPEN) {
     document.addEventListener("DOMContentLoaded", function() {
       document.body.innerHTML = `
         <div style="
@@ -230,22 +227,21 @@ dialog p{margin:0;color:var(--muted);font-size:.95rem}
         ">
           <h1 style="font-size: 2.2rem; margin-bottom: 8px;">🌙 Not quite time yet!</h1>
           <p style="color: #746572; max-width: 360px; line-height: 1.5; font-size: 1rem;">
-            Amy’s daily note is only open every day between <strong>9:00 PM and 10:00 PM</strong>.
+            Amy’s daily note is locked right now. Check back later! ✨
           </p>
-          <p style="color: #A64D79; font-weight: 600; margin-top: 15px;">See you tonight ✨</p>
         </div>
       `;
     });
-    logVisitToDiscord();
+    logVisitToDiscord(); // Logs when someone opens it while locked[cite: 1]
     return;
   }
 
-  logVisitToDiscord();
+  logVisitToDiscord(); // Logs when someone opens it while unlocked[cite: 1]
 
   // =========================================================
-  // 3. YOUR NOTE APP CODE (DAY 4)
+  // 3. NOTE APP DATA & LOGIC
   // =========================================================
-  var TODAY = 4;
+  var TODAY = 4;                       
   var SMS_NUMBER = "+16472239411";     
   var DAYS = [
     {n:1, trait:"She has a very calm energy", kicker:"A grounding presence",
